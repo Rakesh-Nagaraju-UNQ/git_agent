@@ -37,9 +37,10 @@ def test_git_operations():
     result = git_ops.push_code(branch=branch_name, commit_message='Test commit')
     print(f"Push result: {result}")
     
-    return branch_name  # Return the branch name for GitHub API test
+    # Return the branch name for GitHub API test
+    return branch_name
 
-def test_github_api(feature_branch):
+def test_github_api():
     """Test GitHub API operations."""
     print("\n=== Testing GitHub API Operations ===")
     
@@ -52,12 +53,16 @@ def test_github_api(feature_branch):
     result = github_api.get_repo_info(repo_name)
     print(f"Repository info: {result}")
     
+    # Create a test branch for PR
+    timestamp = int(time.time())
+    feature_branch = f'test-branch-{timestamp}'
+    
     # Test PR creation
     print("\nTesting PR creation...")
     result = github_api.create_pr(
         repo_name=repo_name,
         base_branch='main',
-        feature_branch=feature_branch,  # Use the branch name directly
+        feature_branch=feature_branch,
         title='Test PR',
         body='This is a test pull request'
     )
@@ -65,7 +70,7 @@ def test_github_api(feature_branch):
 
 if __name__ == "__main__":
     try:
-        feature_branch = test_git_operations()
-        test_github_api(feature_branch)
+        test_git_operations()
+        test_github_api()
     except Exception as e:
         print(f"Error during testing: {str(e)}") 
