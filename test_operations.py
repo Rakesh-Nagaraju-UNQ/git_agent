@@ -3,6 +3,7 @@ Test script to verify Git and GitHub operations.
 """
 
 import os
+import time
 from src.git_operations import GitOperations
 from src.github_api import GitHubAPI
 
@@ -19,9 +20,10 @@ def test_git_operations():
     result = git_ops.pull_code()
     print(f"Pull result: {result}")
     
-    # Test branch creation
+    # Test branch creation with timestamp to ensure uniqueness
     print("\nTesting branch creation...")
-    branch_name = 'test-feature-branch'  # Changed to use hyphens instead of slashes
+    timestamp = int(time.time())
+    branch_name = f'test-branch-{timestamp}'
     result = git_ops.create_branch(branch_name)
     print(f"Branch creation result: {result}")
     
@@ -42,7 +44,6 @@ def test_github_api(feature_branch):
     # Get repository information
     print("\nTesting repository info retrieval...")
     repo_name = "Rakesh-Nagaraju-UNQ/git_agent"
-    owner = "Rakesh-Nagaraju-UNQ"
     result = github_api.get_repo_info(repo_name)
     print(f"Repository info: {result}")
     
@@ -51,7 +52,7 @@ def test_github_api(feature_branch):
     result = github_api.create_pr(
         repo_name=repo_name,
         base_branch='main',
-        feature_branch=f"{owner}:{feature_branch}",  # Include owner in branch name
+        feature_branch=feature_branch,  # Use the branch name directly
         title='Test PR',
         body='This is a test pull request'
     )
