@@ -62,4 +62,4 @@ if __name__ == "__main__":
         feature_branch = test_git_operations()
         test_github_api(feature_branch)
     except Exception as e:
-        print(f"Error during testing: {str(e)}") 
+        print(f"Error during testing: {str(e)}")
