@@ -5,12 +5,12 @@ Test script to verify Git and GitHub operations.
 import os
 import sys
 import time
+import pytest
+from src.git_operations import GitOperations, MergeStrategy
+from src.github_api import GitHubAPI
 
 # Add parent directory to Python path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.git_operations import GitOperations
-from src.github_api import GitHubAPI
 
 def test_git_operations():
     """Test Git operations."""
@@ -39,6 +39,87 @@ def test_git_operations():
     
     # Return the branch name for GitHub API test
     return branch_name
+
+def test_merge_conflicts():
+    """Test merge conflict detection and resolution."""
+    print("\n=== Testing Merge Conflict Handling ===")
+    
+    # Initialize Git operations
+    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    git_ops = GitOperations(current_dir)
+    
+    # Create test branches
+    timestamp = int(time.time())
+    base_branch = f'base-branch-{timestamp}'
+    feature_branch = f'feature-branch-{timestamp}'
+    
+    # Create and switch to base branch
+    print("\nCreating base branch...")
+    result = git_ops.create_branch(base_branch)
+    assert result['success'], f"Failed to create base branch: {result.get('error')}"
+    
+    # Create a test file in base branch
+    test_file = 'test_conflict.txt'
+    with open(test_file, 'w') as f:
+        f.write("Base branch content")
+    
+    # Commit changes in base branch
+    result = git_ops.push_code(branch=base_branch, commit_message='Add test file')
+    assert result['success'], f"Failed to commit in base branch: {result.get('error')}"
+    
+    # Create and switch to feature branch
+    print("\nCreating feature branch...")
+    result = git_ops.create_branch(feature_branch)
+    assert result['success'], f"Failed to create feature branch: {result.get('error')}"
+    
+    # Modify the test file in feature branch
+    with open(test_file, 'w') as f:
+        f.write("Feature branch content")
+    
+    # Commit changes in feature branch
+    result = git_ops.push_code(branch=feature_branch, commit_message='Modify test file')
+    assert result['success'], f"Failed to commit in feature branch: {result.get('error')}"
+    
+    # Switch back to base branch and modify the same file
+    print("\nModifying file in base branch...")
+    result = git_ops.create_branch(base_branch)
+    assert result['success'], f"Failed to switch to base branch: {result.get('error')}"
+    
+    with open(test_file, 'w') as f:
+        f.write("Modified base branch content")
+    
+    # Commit changes in base branch
+    result = git_ops.push_code(branch=base_branch, commit_message='Modify test file in base')
+    assert result['success'], f"Failed to commit in base branch: {result.get('error')}"
+    
+    # Attempt to merge feature branch into base branch
+    print("\nAttempting merge...")
+    result = git_ops.merge_branch(
+        base_branch=base_branch,
+        feature_branch=feature_branch,
+        strategy=MergeStrategy.RECURSIVE
+    )
+    
+    # Check for conflicts
+    if not result['success'] and 'conflicts' in result:
+        print(f"Merge conflicts detected in files: {result['conflicts']}")
+        
+        # Test conflict resolution
+        print("\nTesting conflict resolution...")
+        for file_path in result['conflicts']:
+            # Try resolving with 'ours' strategy
+            resolution_result = git_ops.resolve_conflicts(file_path, 'ours')
+            print(f"Resolution result for {file_path}: {resolution_result}")
+            assert resolution_result['success'], f"Failed to resolve conflicts: {resolution_result.get('error')}"
+    
+    # Clean up test branches
+    print("\nCleaning up test branches...")
+    git_ops.repo.git.branch('-D', base_branch)
+    git_ops.repo.git.branch('-D', feature_branch)
+    
+    # Clean up test file
+    if os.path.exists(test_file):
+        os.remove(test_file)
 
 def test_github_api():
     """Test GitHub API operations."""
@@ -100,6 +181,7 @@ def test_github_api():
 if __name__ == "__main__":
     try:
         test_git_operations()
+        test_merge_conflicts()
         test_github_api()
     except Exception as e:
         print(f"Error during testing: {str(e)}") 
