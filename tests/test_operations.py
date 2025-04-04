@@ -3,7 +3,12 @@ Test script to verify Git and GitHub operations.
 """
 
 import os
+import sys
 import time
+
+# Add parent directory to Python path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.git_operations import GitOperations
 from src.github_api import GitHubAPI
 
@@ -12,7 +17,7 @@ def test_git_operations():
     print("\n=== Testing Git Operations ===")
     
     # Initialize Git operations with current directory
-    current_dir = os.getcwd()
+    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     git_ops = GitOperations(current_dir)
     
     # Test pull operation
@@ -63,4 +68,4 @@ if __name__ == "__main__":
         feature_branch = test_git_operations()
         test_github_api(feature_branch)
     except Exception as e:
-        print(f"Error during testing: {str(e)}")
+        print(f"Error during testing: {str(e)}") 
